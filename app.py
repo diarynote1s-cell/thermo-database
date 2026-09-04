@@ -291,6 +291,43 @@ else:
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # ============================================================
+    # QUICK CP CALCULATOR
+    # ============================================================
+    st.markdown("---")
+    st.markdown("### Quick Cp Calculator")
+    st.write("Type or select any material from the database and set a temperature to get the exact $C_p$ value.")
+    
+    calc_col1, calc_col2, calc_col3 = st.columns([2, 1, 1.5])
+    
+    with calc_col1:
+        # User can search and type any material from the entire dataset
+        calc_mat = st.selectbox("Search Material", options=df['name'].unique())
+        
+    with calc_col2:
+        calc_temp = st.number_input("Temperature (K)", min_value=1.0, value=298.15, step=10.0)
+        
+    with calc_col3:
+        st.write("") # Spacer to align vertically with inputs
+        st.write("")
+        if calc_mat:
+            mat_row = df[df['name'] == calc_mat].iloc[0]
+            # Ensure calculating array logic works on single float by wrapping in np.array
+            temp_array = np.array([calc_temp])
+            cp_val = calculate_cp(temp_array, mat_row['equation_type'], mat_row['coeffs'])[0]
+            unit_str = "J/mol·K" if mat_row['unit'] == "molar" else "J/g·K"
+            
+            valid_tmin = float(mat_row['Tmin_K'])
+            valid_tmax = float(mat_row['Tmax_K'])
+            
+            if calc_temp < valid_tmin or calc_temp > valid_tmax:
+                st.warning(f"**{cp_val:.3f} {unit_str}** *(Extrapolated)*")
+            else:
+                st.success(f"**{cp_val:.3f} {unit_str}**")
+
+    st.markdown("---")
+    # ============================================================
+
     # Equations
     st.markdown("### Equations Used")
     for mat_name in selected_materials:
