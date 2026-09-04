@@ -63,38 +63,38 @@ def calculate_cp(T, eq_type, coeffs_str):
         return np.full_like(T, np.nan, dtype=float)
 
 
-def get_equation_text(eq_type, coeffs_str):
-    """Create a readable equation from stored coefficients."""
+def get_equation_markdown(eq_type, coeffs_str):
+    """Create a LaTeX-rendered equation from stored coefficients."""
     try:
         coeffs = json.loads(coeffs_str.replace('""', '"'))
 
         if eq_type == "shomate":
             return (
-                "Cp = A + B·t + C·t² + D·t³ + E/t²\n"
-                "where t = T/1000\n\n"
-                f"A = {coeffs['A']}\n"
-                f"B = {coeffs['B']}\n"
-                f"C = {coeffs['C']}\n"
-                f"D = {coeffs['D']}\n"
-                f"E = {coeffs['E']}"
+                "$$C_p = A + B t + C t^2 + D t^3 + \\frac{E}{t^2}$$\n"
+                "*(where $t = T/1000$)*\n\n"
+                f"* **A** = {coeffs['A']}\n"
+                f"* **B** = {coeffs['B']}\n"
+                f"* **C** = {coeffs['C']}\n"
+                f"* **D** = {coeffs['D']}\n"
+                f"* **E** = {coeffs['E']}"
             )
         elif eq_type == "kelley":
             return (
-                "Cp = a + b·T + c/T²\n\n"
-                f"a = {coeffs['a']}\n"
-                f"b = {coeffs['b']}\n"
-                f"c = {coeffs['c']}"
+                "$$C_p = a + b T + \\frac{c}{T^2}$$\n\n"
+                f"* **a** = {coeffs['a']}\n"
+                f"* **b** = {coeffs['b']}\n"
+                f"* **c** = {coeffs['c']}"
             )
         elif eq_type == "linear":
             return (
-                "Cp = c₀ + c₁·T\n\n"
-                f"c₀ = {coeffs['c0']}\n"
-                f"c₁ = {coeffs['c1']}"
+                "$$C_p = c_0 + c_1 T$$\n\n"
+                f"* **c₀** = {coeffs['c0']}\n"
+                f"* **c₁** = {coeffs['c1']}"
             )
         elif eq_type == "const":
             return (
-                "Cp = c₀\n\n"
-                f"c₀ = {coeffs['c0']}"
+                "$$C_p = c_0$$\n\n"
+                f"* **c₀** = {coeffs['c0']}"
             )
 
         return "Equation information unavailable."
@@ -304,13 +304,14 @@ else:
     
     for mat_name in selected_materials:
         mat_data = df[df['name'] == mat_name].iloc[0]
-        equation = get_equation_text(mat_data['equation_type'], mat_data['coeffs'])
+        equation_md = get_equation_markdown(mat_data['equation_type'], mat_data['coeffs'])
         
         # Get readable equation name, fallback to capitalized raw type if not found
         eq_display_name = equation_names.get(mat_data['equation_type'], str(mat_data['equation_type']).capitalize())
         
         st.markdown(f"**{mat_name} ({mat_data['formula']}) [{eq_display_name} Equation]**")
-        st.code(equation)
+        st.markdown(equation_md)
+        st.write("---") # Adds a subtle visual separator between multiple materials
 
     # Summary Table & Export
     st.markdown("### Selected Material Details")
