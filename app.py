@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import json
-import os
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -132,9 +131,8 @@ t_min_slider, t_max_slider = st.sidebar.slider(
 # ============================================================
 # MAIN DASHBOARD
 # ============================================================
-# --- ADDED SAFE LOGO LOADING HERE ---
-if os.path.exists("image_c7cf65.png"):
-    st.image("image_c7cf65.png", width=120)
+# --- ADDED LOGO HERE ---
+st.image("image_c7cf65.png", width=120)
 
 st.title("Interactive Thermodynamic Database")
 st.markdown("Analyze the variation of specific heat capacity ($C_p$) with temperature ($T$) across various engineering materials.")
@@ -228,7 +226,7 @@ else:
                 "T (K)": round(t_val, 1),
                 f"Cp ({unit_str})": round(cp_val, 4),
                 "In valid range?": in_valid_range,
-                "References": source 
+                "References": source # Added References column here
             })
 
     # Dynamically build the Y-axis label
