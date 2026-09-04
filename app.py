@@ -160,6 +160,7 @@ else:
         valid_tmax = float(mat_data['Tmax_K'])
         unit = mat_data['unit']
         category = mat_data['category']
+        source = mat_data['source'] # Extracting source for the export table
         
         mat_color = colors[idx % len(colors)]
         unit_str = "J/mol·K" if unit == "molar" else "J/g·K"
@@ -221,7 +222,8 @@ else:
                 "Category": category,
                 "T (K)": round(t_val, 1),
                 f"Cp ({unit_str})": round(cp_val, 4),
-                "In valid range?": in_valid_range
+                "In valid range?": in_valid_range,
+                "References": source # Added References column here
             })
 
     # Dynamically build the Y-axis label
