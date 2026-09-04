@@ -131,6 +131,9 @@ t_min_slider, t_max_slider = st.sidebar.slider(
 # ============================================================
 # MAIN DASHBOARD
 # ============================================================
+# --- ADDED LOGO HERE ---
+st.image("image_c7cf65.png", width=120)
+
 st.title("Interactive Thermodynamic Database")
 st.markdown("Analyze the variation of specific heat capacity ($C_p$) with temperature ($T$) across various engineering materials.")
 
