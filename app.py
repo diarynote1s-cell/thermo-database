@@ -211,7 +211,7 @@ else:
                     hovertemplate=(f"<b>{mat_name}</b> (Extrapolated)<br>Temp: %{{x:.1f}} K<br>Cp: %{{y:.2f}} {unit_str}<br>Category: {category}<extra></extra>")
                 ))
 
-        # --- Export Data Compilation (Matches Excel Screenshot) ---
+        # --- Export Data Compilation (Hidden from UI, pushed to CSV) ---
         Cp_export_vals = calculate_cp(T_export_array, eq_type, coeffs_str)
         for t_val, cp_val in zip(T_export_array, Cp_export_vals):
             in_valid_range = "yes" if valid_tmin <= t_val <= valid_tmax else "no"
@@ -242,8 +242,8 @@ else:
     # QUICK CP CALCULATOR
     # ============================================================
     st.markdown("---")
-    st.markdown("### Quick Cp Calculator")
-    st.write("Type or select any material from the database and set a temperature to get the exact $C_p$ value.")
+    st.markdown("### Quick Cp Calculator & Table Evaluation Temperature")
+    st.write("Set a temperature below to calculate the exact $C_p$ value and dynamically update the summary table.")
     
     calc_col1, calc_col2, calc_col3 = st.columns(3)
     
@@ -281,15 +281,44 @@ else:
         st.code(equation)
 
     # ============================================================
-    # TEMPERATURE-SPECIFIC DATA TABLE & EXPORT
+    # SELECTED MATERIAL DETAILS (CLEAN WEBPAGE TABLE)
     # ============================================================
-    st.markdown("### Exportable Temperature Sweep Data")
-    export_df = pd.DataFrame(export_data)
-    st.dataframe(export_df, use_container_width=True)
+    st.markdown("### Selected Material Details")
+    summary_data = []
     
+    for mat_name in selected_materials:
+        mat_data = df[df['name'] == mat_name].iloc[0]
+        unit = mat_data['unit']
+        unit_str = "J/mol·K" if unit == "molar" else "J/g·K"
+        valid_tmin = float(mat_data['Tmin_K'])
+        valid_tmax = float(mat_data['Tmax_K'])
+        
+        # Calculate Cp at the user-defined calc_temp
+        cp_val = calculate_cp(np.array([calc_temp]), mat_data['equation_type'], mat_data['coeffs'])[0]
+        is_extrap = calc_temp < valid_tmin or calc_temp > valid_tmax
+        cp_display = f"{cp_val:.3f}*" if is_extrap else f"{cp_val:.3f}"
+        
+        summary_data.append({
+            "Material": mat_name,
+            "Formula": mat_data['formula'],
+            "Category": mat_data['category'],
+            f"Cp @ {calc_temp} K ({unit_str})": cp_display,
+            "Valid T Range (K)": f"{valid_tmin} - {valid_tmax}",
+            "References": mat_data['source']
+        })
+        
+    summary_df = pd.DataFrame(summary_data)
+    st.dataframe(summary_df, use_container_width=True)
+    st.caption(f"* Indicates the evaluation temperature ({calc_temp} K) falls outside the valid range (extrapolated).")
+    
+    # ============================================================
+    # EXPORT TEMPERATURE SWEEP (CSV ONLY)
+    # ============================================================
+    # Generates the robust sweep data natively without cluttering the UI
+    export_df = pd.DataFrame(export_data)
     csv = export_df.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label="Export data (as csv)",
+        label="Export Full Temperature Sweep (CSV)",
         data=csv,
         file_name='cp_t_selected_materials.csv',
         mime='text/csv',
