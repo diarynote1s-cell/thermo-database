@@ -68,25 +68,29 @@ def get_equation_text(eq_type, coeffs_str):
                 f"B = {coeffs['B']}\n"
                 f"C = {coeffs['C']}\n"
                 f"D = {coeffs['D']}\n"
-                f"E = {coeffs['E']}"
+                f"E = {coeffs['E']}\n\n"
+                "(Shomate Equation)"
             )
         elif eq_type == "kelley":
             return (
                 "Cp = a + b·T + c/T²\n\n"
                 f"a = {coeffs['a']}\n"
                 f"b = {coeffs['b']}\n"
-                f"c = {coeffs['c']}"
+                f"c = {coeffs['c']}\n\n"
+                "(Kelley Equation)"
             )
         elif eq_type == "linear":
             return (
                 "Cp = c₀ + c₁·T\n\n"
                 f"c₀ = {coeffs['c0']}\n"
-                f"c₁ = {coeffs['c1']}"
+                f"c₁ = {coeffs['c1']}\n\n"
+                "(Linear Equation)"
             )
         elif eq_type == "const":
             return (
                 "Cp = c₀\n\n"
-                f"c₀ = {coeffs['c0']}"
+                f"c₀ = {coeffs['c0']}\n\n"
+                "(Constant Equation)"
             )
 
         return "Equation information unavailable."
