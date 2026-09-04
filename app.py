@@ -146,23 +146,16 @@ if not selected_materials:
     st.info("Please select at least one material from the sidebar to generate the plot.")
 else:
     fig = go.Figure()
-    summary_data = []
+    export_data = []
     
-    # Vibrant, eye-catching colors inspired by the reference image
+    # Generate 100 temperature points across the selected slider range for the export table
+    T_export_array = np.linspace(t_min_slider, t_max_slider, 100)
+    
     colors = [
-        "#3B82F6",  # Vibrant Blue
-        "#F59E0B",  # Vibrant Amber/Gold
-        "#10B981",  # Vibrant Mint Green
-        "#EF4444",  # Vibrant Red
-        "#8B5CF6",  # Vibrant Purple
-        "#06B6D4",  # Vibrant Cyan
-        "#EC4899",  # Vibrant Pink
-        "#F97316",  # Vibrant Orange
-        "#84CC16",  # Vibrant Lime
-        "#14B8A6"   # Vibrant Teal
+        "#3B82F6", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6", 
+        "#06B6D4", "#EC4899", "#F97316", "#84CC16", "#14B8A6"
     ]
     
-    # Keep track of units to dynamically set the y-axis label
     selected_units = set()
 
     for idx, mat_name in enumerate(selected_materials):
@@ -175,9 +168,7 @@ else:
         valid_tmax = float(mat_data['Tmax_K'])
         unit = mat_data['unit']
         category = mat_data['category']
-        source = mat_data['source']
         
-        # Assign a specific color to this material
         mat_color = colors[idx % len(colors)]
 
         y_label = "Cp (J/mol·K)" if unit == "molar" else "Cp (J/g·K)"
@@ -192,24 +183,12 @@ else:
                 T_extrap = np.linspace(extrap_min, extrap_max, 100)
                 Cp_extrap = calculate_cp(T_extrap, eq_type, coeffs_str)
                 
-                fig.add_trace(
-                    go.Scatter(
-                        x=T_extrap,
-                        y=Cp_extrap,
-                        mode="lines",
-                        name=f"{mat_name} (Extrapolated)",
-                        legendgroup=mat_name,
-                        showlegend=False, # Hide from legend to avoid duplicates
-                        line=dict(color=mat_color, dash="dash"),
-                        hovertemplate=(
-                            f"<b>{mat_name}</b> (Extrapolated)<br>"
-                            "Temp: %{x:.1f} K<br>"
-                            f"Cp: %{{y:.2f}} {y_label}<br>"
-                            f"Category: {category}"
-                            "<extra></extra>"
-                        )
-                    )
-                )
+                fig.add_trace(go.Scatter(
+                    x=T_extrap, y=Cp_extrap, mode="lines",
+                    name=f"{mat_name} (Extrapolated)", legendgroup=mat_name,
+                    showlegend=False, line=dict(color=mat_color, dash="dash"),
+                    hovertemplate=(f"<b>{mat_name}</b> (Extrapolated)<br>Temp: %{{x:.1f}} K<br>Cp: %{{y:.2f}} {y_label}<br>Category: {category}<extra></extra>")
+                ))
 
         # --- 2. VALID RANGE (Solid) ---
         plot_t_min = max(t_min_slider, valid_tmin)
@@ -219,23 +198,11 @@ else:
             T_array = np.linspace(plot_t_min, plot_t_max, 500)
             Cp_array = calculate_cp(T_array, eq_type, coeffs_str)
             
-            fig.add_trace(
-                go.Scatter(
-                    x=T_array,
-                    y=Cp_array,
-                    mode="lines",
-                    name=f"{mat_name} ({formula})",
-                    legendgroup=mat_name,
-                    line=dict(color=mat_color),
-                    hovertemplate=(
-                        f"<b>{mat_name}</b><br>"
-                        "Temp: %{x:.1f} K<br>"
-                        f"Cp: %{{y:.2f}} {y_label}<br>"
-                        f"Category: {category}"
-                        "<extra></extra>"
-                    )
-                )
-            )
+            fig.add_trace(go.Scatter(
+                x=T_array, y=Cp_array, mode="lines",
+                name=f"{mat_name} ({formula})", legendgroup=mat_name, line=dict(color=mat_color),
+                hovertemplate=(f"<b>{mat_name}</b><br>Temp: %{{x:.1f}} K<br>Cp: %{{y:.2f}} {y_label}<br>Category: {category}<extra></extra>")
+            ))
 
         # --- 3. UPPER EXTRAPOLATION (Dashed) ---
         if t_max_slider > valid_tmax:
@@ -246,44 +213,33 @@ else:
                 T_extrap = np.linspace(extrap_min, extrap_max, 100)
                 Cp_extrap = calculate_cp(T_extrap, eq_type, coeffs_str)
                 
-                fig.add_trace(
-                    go.Scatter(
-                        x=T_extrap,
-                        y=Cp_extrap,
-                        mode="lines",
-                        name=f"{mat_name} (Extrapolated)",
-                        legendgroup=mat_name,
-                        showlegend=False, # Hide from legend to avoid duplicates
-                        line=dict(color=mat_color, dash="dash"),
-                        hovertemplate=(
-                            f"<b>{mat_name}</b> (Extrapolated)<br>"
-                            "Temp: %{x:.1f} K<br>"
-                            f"Cp: %{{y:.2f}} {y_label}<br>"
-                            f"Category: {category}"
-                            "<extra></extra>"
-                        )
-                    )
-                )
+                fig.add_trace(go.Scatter(
+                    x=T_extrap, y=Cp_extrap, mode="lines",
+                    name=f"{mat_name} (Extrapolated)", legendgroup=mat_name,
+                    showlegend=False, line=dict(color=mat_color, dash="dash"),
+                    hovertemplate=(f"<b>{mat_name}</b> (Extrapolated)<br>Temp: %{{x:.1f}} K<br>Cp: %{{y:.2f}} {y_label}<br>Category: {category}<extra></extra>")
+                ))
 
-        # Summary data
-        summary_data.append({
-            "Material": mat_name,
-            "Formula": formula,
-            "Category": category,
-            "Valid T Range (K)": f"{valid_tmin} - {valid_tmax}",
-            "Unit": unit,
-            "Data Source": source
-        })
+        # --- Export Data Compilation ---
+        Cp_export_vals = calculate_cp(T_export_array, eq_type, coeffs_str)
+        for t_val, cp_val in zip(T_export_array, Cp_export_vals):
+            in_valid_range = "yes" if valid_tmin <= t_val <= valid_tmax else "no"
+            export_data.append({
+                "Material": mat_name,
+                "Formula": formula,
+                "Category": category,
+                "T (K)": round(t_val, 1),
+                f"Cp ({y_label.replace('Cp ', '')})": round(cp_val, 4),
+                "In valid range?": in_valid_range
+            })
 
-    # Dynamically build the Y-axis label based on selected materials
+    # Dynamically build the Y-axis label
     y_axis_unit_str = " or ".join(sorted(list(selected_units)))
-    y_axis_title = f"Specific Heat Capacity ({y_axis_unit_str})"
-
-    # Graph layout
+    
     fig.update_layout(
         title="Specific Heat Capacity (Cp) vs Temperature (T)",
         xaxis_title="Temperature (K)",
-        yaxis_title=y_axis_title,
+        yaxis_title=f"Specific Heat Capacity ({y_axis_unit_str})",
         legend_title="Selected Materials",
         hovermode="x unified",
         template="plotly_dark"
@@ -298,37 +254,34 @@ else:
     st.markdown("### Quick Cp Calculator")
     st.write("Type or select any material from the database and set a temperature to get the exact $C_p$ value.")
     
-    calc_col1, calc_col2, calc_col3 = st.columns([2, 1, 1.5])
+    calc_col1, calc_col2, calc_col3 = st.columns(3)
     
     with calc_col1:
-        # User can search and type any material from the entire dataset
         calc_mat = st.selectbox("Search Material", options=df['name'].unique())
         
     with calc_col2:
         calc_temp = st.number_input("Temperature (K)", min_value=1.0, value=298.15, step=10.0)
         
     with calc_col3:
-        st.write("") # Spacer to align vertically with inputs
-        st.write("")
         if calc_mat:
             mat_row = df[df['name'] == calc_mat].iloc[0]
-            # Ensure calculating array logic works on single float by wrapping in np.array
+            unit_str = "J/mol·K" if mat_row['unit'] == "molar" else "J/g·K"
             temp_array = np.array([calc_temp])
             cp_val = calculate_cp(temp_array, mat_row['equation_type'], mat_row['coeffs'])[0]
-            unit_str = "J/mol·K" if mat_row['unit'] == "molar" else "J/g·K"
             
             valid_tmin = float(mat_row['Tmin_K'])
             valid_tmax = float(mat_row['Tmax_K'])
             
-            if calc_temp < valid_tmin or calc_temp > valid_tmax:
-                st.warning(f"**{cp_val:.3f} {unit_str}** *(Extrapolated)*")
-            else:
-                st.success(f"**{cp_val:.3f} {unit_str}**")
+            is_extrapolated = calc_temp < valid_tmin or calc_temp > valid_tmax
+            display_val = f"{cp_val:.3f} (Extrapolated)" if is_extrapolated else f"{cp_val:.3f}"
+            
+            st.text_input(f"Cp ({unit_str})", value=display_val, disabled=True)
 
     st.markdown("---")
+    
     # ============================================================
-
-    # Equations
+    # EQUATIONS USED
+    # ============================================================
     st.markdown("### Equations Used")
     for mat_name in selected_materials:
         mat_data = df[df['name'] == mat_name].iloc[0]
@@ -336,16 +289,17 @@ else:
         st.markdown(f"**{mat_name} ({mat_data['formula']})**")
         st.code(equation)
 
-    # Summary Table & Export
-    st.markdown("### Selected Material Details")
-    summary_df = pd.DataFrame(summary_data)
-    st.dataframe(summary_df, use_container_width=True)
+    # ============================================================
+    # TEMPERATURE-SPECIFIC DATA TABLE & EXPORT
+    # ============================================================
+    st.markdown("### Selected Material Details (Temperature Range Data)")
+    export_df = pd.DataFrame(export_data)
+    st.dataframe(export_df, use_container_width=True)
     
-    # Add Export Button
-    csv = summary_df.to_csv(index=False).encode('utf-8')
+    csv = export_df.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="Export data (as csv)",
         data=csv,
-        file_name='material_summary.csv',
+        file_name='cp_t_selected_materials.csv',
         mime='text/csv',
     )
