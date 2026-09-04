@@ -293,10 +293,23 @@ else:
 
     # Equations
     st.markdown("### Equations Used")
+    
+    # Map raw equation types to readable names
+    equation_names = {
+        "shomate": "Shomate",
+        "kelley": "Kelley",
+        "linear": "Linear",
+        "const": "Constant"
+    }
+    
     for mat_name in selected_materials:
         mat_data = df[df['name'] == mat_name].iloc[0]
         equation = get_equation_text(mat_data['equation_type'], mat_data['coeffs'])
-        st.markdown(f"**{mat_name} ({mat_data['formula']})**")
+        
+        # Get readable equation name, fallback to capitalized raw type if not found
+        eq_display_name = equation_names.get(mat_data['equation_type'], str(mat_data['equation_type']).capitalize())
+        
+        st.markdown(f"**{mat_name} ({mat_data['formula']}) [{eq_display_name} Equation]**")
         st.code(equation)
 
     # Summary Table & Export
